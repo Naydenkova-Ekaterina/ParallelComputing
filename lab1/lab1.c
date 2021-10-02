@@ -7,14 +7,14 @@
 
 double* generate(double *array, int size, int min, int max) {
 	unsigned int seed = 10;
-	for (int i = 0; i < size; i++)
-	        array[i] = min + ((double) (rand_r(&seed)%(max-min)));
+	for (int i = 0; i < size; i++) {
+		array[i] = min + ((double) (rand_r(&seed) % (max - min)));
+	}
 
 	return array;
 }
 
 void map_array1(double *array1, int size) {
-
     for (int i = 0; i < size; i++) {
         array1[i] = pow(sinh(array1[i]), 2);
     }
@@ -25,17 +25,14 @@ void map_array2(double *array2, int size) {
     double new_element = 0;
 
     for (int i = 0; i < size; i++) {
-
-	new_element = previous_element + array2[i];
-	previous_element = array2[i];
-	array2[i] = sqrt(exp(1)*new_element);
-    }
+		new_element = previous_element + array2[i];
+		previous_element = array2[i];
+		array2[i] = sqrt(exp(1) * new_element);
+	}
 }
 
 void merge(double *array1, double *array2, int size) {
-    int i;
-
-    for (i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         array2[i] = array1[i]/array2[i];
     }
 }
@@ -66,28 +63,28 @@ void selection_sort(double *array, int size)
 }
 
 double reduce(double *array, int size) {
-    	double res = 0;
+	double res = 0;
 	double min = array[0];
-        for (int i = 0; i < size; i++) {
-    	    if (array[i] < min && array[i] != 0) {
-    	        min = array[i];
-    	    }
-    	}
+	for (int i = 0; i < size; i++) {
+		if (array[i] < min && array[i] != 0) {
+			min = array[i];
+		}
+	}
 
-    	for (int i = 0; i < size; i++) {
-    	    if ((int)(array[i] / min) % 2 == 0) {
-    	        res += sin(array[i]);
-    	    }
-    	}
+	for (int i = 0; i < size; i++) {
+		if ((int) (array[i] / min) % 2 == 0) {
+			res += sin(array[i]);
+		}
+	}
 
-    	return res;
+	return res;
 }
 
-void printArray(double *arr, int size)
+void printArray(double *array, int size)
 {
-    int i;
-    for (i=0; i < size; i++)
-        printf("%f ", arr[i]);
+    for (int i=0; i < size; i++) {
+		printf("%f ", array[i]);
+	}
     printf("\n");
 }
 
@@ -97,9 +94,9 @@ int main(int argc, char* argv[])
 	struct timeval T1, T2;
 	long delta_ms;
 
-        if(argc == 2)
+	if (argc == 2) {
 		N = atoi(argv[1]); /* N равен первому параметру командной строки */
-        else {
+	} else {
 		printf("Usage: ./lab1 N");
 		return 0;
 	}
@@ -109,8 +106,6 @@ int main(int argc, char* argv[])
 	double *first_array = malloc(sizeof(double) * N);
 	double *second_array = malloc(sizeof(double) * (N / 2));
 	double X;
-
-
 
 	for (i=0; i<100; i++) /* 100 экспериментов */
 	{
@@ -129,15 +124,17 @@ int main(int argc, char* argv[])
 
 		/* Отсортировать массив с результатами указанным методом */
 		selection_sort(second_array, N/2);
-    		//printf("\n");    printf("\n");    printf("\n");
+		//printf("\n");    printf("\n");    printf("\n");
 		//printArray(second_array, N/2);
 		X = reduce(second_array, N/2);
-	printf("\nX=%f \n", X);
-
+		printf("\nX=%f \n", X);
 	}
+
 	gettimeofday(&T2, NULL); /* запомнить текущее время T2 */
 	delta_ms = 1000*(T2.tv_sec - T1.tv_sec) + (T2.tv_usec - T1.tv_usec)/1000;
+
 	printf("\nN=%d. Milliseconds passed: %ld\n", N, delta_ms); /* T2 - T1 */
 	printf("\nX=%f \n", X);
+
 	return 0;
 }
