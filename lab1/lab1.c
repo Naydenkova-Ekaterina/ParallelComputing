@@ -6,7 +6,7 @@
 #define A 900
 
 double* generate(double *array, int size, int min, int max) {
-	unsigned int seed = 23;
+	unsigned int seed = 10;
 	for (int i = 0; i < size; i++)
 	        array[i] = min + ((double) (rand_r(&seed)%(max-min)));
 
@@ -21,11 +21,14 @@ void map_array1(double *array1, int size) {
 }
 
 void map_array2(double *array2, int size) {
-    double previous_element = 0;
+    double previous_element = 0; 
+    double new_element = 0;
 
     for (int i = 0; i < size; i++) {
-        array2[i] = sqrt(exp(1)*(previous_element + array2[i]));
-        previous_element = array2[i];
+
+	new_element = previous_element + array2[i];
+	previous_element = array2[i];
+	array2[i] = sqrt(exp(1)*new_element);
     }
 }
 
@@ -94,18 +97,20 @@ int main(int argc, char* argv[])
 	struct timeval T1, T2;
 	long delta_ms;
 
-        if(argc > 1)
+        if(argc == 2)
 		N = atoi(argv[1]); /* N равен первому параметру командной строки */
         else {
 		printf("Usage: ./lab1 N");
 		return 0;
 	}
 
+	gettimeofday(&T1, NULL); /* запомнить текущее время T1 */
+
 	double *first_array = malloc(sizeof(double) * N);
 	double *second_array = malloc(sizeof(double) * (N / 2));
 	double X;
 
-	gettimeofday(&T1, NULL); /* запомнить текущее время T1 */
+
 
 	for (i=0; i<100; i++) /* 100 экспериментов */
 	{
@@ -136,4 +141,3 @@ int main(int argc, char* argv[])
 	printf("\nX=%f \n", X);
 	return 0;
 }
-
