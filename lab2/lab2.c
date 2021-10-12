@@ -106,7 +106,7 @@ int main(int argc, char * argv[]) {
 
   double X;
 
-  for (i = 0; i < 5; i++) /* 100 экспериментов */ {
+  for (i = 0; i < 100; i++) /* 100 экспериментов */ {
     seed = i;
     /* Заполнить массив исходных данных размером N */
     generate(first_array, & seed, N, 1, A);
