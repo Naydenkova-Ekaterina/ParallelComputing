@@ -1,14 +1,11 @@
 #include <stdio.h>
-
 #include <stdlib.h>
-
 #include <sys/time.h>
-
 #include <math.h>
 
 #define A 504
 
-double * generate(double * array, unsigned int * seed, int size, int min, int max) {
+double * generate_array(double * array, unsigned int * seed, int size, int min, int max) {
   for (int i = 0; i < size; i++) {
     array[i] = min + ((double)(rand_r(seed) % (max - min)));
   }
@@ -65,7 +62,7 @@ void selection_sort(double * array, int size) {
 double reduce(double * array, int size) {
   double res = 0;
   double min = array[0];
-  for (int i = 0; i < size; i++) {
+  for (int i = 1; i < size; i++) {
     if (array[i] < min && array[i] != 0) {
       min = array[i];
     }
@@ -111,8 +108,8 @@ int main(int argc, char * argv[]) {
     //srand(i); /* инициализировать начальное значение ГСЧ */
     seed = i;
     /* Заполнить массив исходных данных размером N */
-    generate(first_array, & seed, N, 1, A);
-    generate(second_array, & seed, N / 2, A, 10 * A);
+    generate_array(first_array, & seed, N, 1, A);
+    generate_array(second_array, & seed, N / 2, A, 10 * A);
     //printArray(first_array, N);
     //printArray(second_array, N/2);
 
@@ -127,8 +124,11 @@ int main(int argc, char * argv[]) {
 
     //printArray(second_array, N/2);
     X = reduce(second_array, N / 2);
-    printf("\nX=%f \n", X);
+    printf("\n%d: X=%f \n", i, X);
   }
+
+  free(first_array);
+  free(second_array);
 
   gettimeofday( & T2, NULL); /* запомнить текущее время T2 */
   delta_ms = 1000 * (T2.tv_sec - T1.tv_sec) + (T2.tv_usec - T1.tv_usec) / 1000;
