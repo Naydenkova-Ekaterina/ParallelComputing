@@ -1,13 +1,9 @@
 #include <stdio.h>
-
 #include <stdlib.h>
-
 #include <sys/time.h>
-
 #include <math.h>
 
 #include "/home/ekaterina/Загрузки/FW_1.3.1_Lin64/fwBase.h"
-
 #include "/home/ekaterina/Загрузки/FW_1.3.1_Lin64/fwSignal.h"
 
 #define A 504
@@ -19,7 +15,7 @@ void printArray(double * array, int size) {
   printf("\n");
 }
 
-double * generate(double * array, unsigned int * seed, int size, int min, int max) {
+double * generate_array(double * array, unsigned int * seed, int size, int min, int max) {
   for (int i = 0; i < size; i++) {
     array[i] = min + ((double)(rand_r(seed) % (max - min)));
   }
@@ -69,7 +65,7 @@ void selection_sort(double * array, int size) {
 double reduce(double * array, int size) {
   double res = 0;
   double min = array[0];
-  for (int i = 0; i < size; i++) {
+  for (int i = 1; i < size; i++) {
     if (array[i] < min && array[i] != 0) {
       min = array[i];
     }
@@ -109,8 +105,8 @@ int main(int argc, char * argv[]) {
   for (i = 0; i < 100; i++) /* 100 экспериментов */ {
     seed = i;
     /* Заполнить массив исходных данных размером N */
-    generate(first_array, & seed, N, 1, A);
-    generate(second_array, & seed, N / 2, A, 10 * A);
+    generate_array(first_array, & seed, N, 1, A);
+    generate_array(second_array, & seed, N / 2, A, 10 * A);
     //printArray(first_array, N);
     //printArray(second_array, N/2);
 
@@ -125,7 +121,7 @@ int main(int argc, char * argv[]) {
 
     //printArray(second_array, N/2);
     X = reduce(second_array, N / 2);
-    printf("\nX=%f \n", X);
+    printf("\n%d: X=%f \n", i, X);
   }
 
   gettimeofday( & T2, NULL); /* запомнить текущее время T2 */
