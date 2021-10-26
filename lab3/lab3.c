@@ -1,17 +1,13 @@
 #include <stdio.h>
-
 #include <stdlib.h>
-
 #include <sys/time.h>
-
 #include <math.h>
-
 #include <omp.h>
 
-#ifdef _OPENMP#include "omp.h"
-
+#ifdef _OPENMP
+#include "omp.h"
 #else
-void omp_set_num_threads(int M) {}
+void omp_set_num_threads(int M) { }
 #endif
 
 #define A 504
@@ -25,9 +21,7 @@ double * generate_array(double * array, unsigned int * seed, int size, int min, 
 
 void map_array1(double * array1, int size) {
   int i;
-  #pragma omp parallel
-  for
-  default (none) private(i) shared(array1, size)
+  #pragma omp parallel for default(none) private(i) shared(array1, size)
   for (i = 0; i < size; i++) {
     array1[i] = exp(sqrt(array1[i]));
   }
@@ -35,34 +29,28 @@ void map_array1(double * array1, int size) {
 
 void copy_array2(double * array2, double * array2_copy, int size) {
   int i;
-  #pragma omp parallel
-  for
-  default (none) private(i) shared(array2, array2_copy, size)
+  #pragma omp parallel for default(none) private(i) shared(array2, array2_copy, size)
   for (i = 0; i < size; i++) {
-    array2_copy[i + 1] = array2[i];
+    array2_copy[i+1] = array2[i];
   }
 }
 
 void map_array2(double * array2, double * array2_copy, int size) {
   int i;
 
-  #pragma omp parallel
-  for
-  default (none) private(i) shared(array2, array2_copy, size)
+  #pragma omp parallel for default(none) private(i) shared(array2, array2_copy, size)
   for (i = 0; i < size; i++) {
 
     if (i > 0) {
       array2[i] = array2[i] + array2_copy[i];
-    }
+    } 
     array2[i] = fabs(tan(array2[i]));
   }
 }
 
 void merge(double * array1, double * array2, int size) {
   int i;
-  #pragma omp parallel
-  for
-  default (none) private(i) shared(array1, array2, size)
+  #pragma omp parallel for default(none) private(i) shared(array1, array2, size)
   for (i = 0; i < size; i++) {
     if (array1[i] < array2[i]) {
       array2[i] = array1[i];
@@ -101,9 +89,7 @@ double reduce(double * array, int size) {
     }
   }
   int i;
-  #pragma omp parallel
-  for
-  default (none) private(i) shared(size, min, array) reduction(+: res)
+  #pragma omp parallel for default(none) private(i) shared(size, min, array)  reduction(+:res)
   for (i = 0; i < size; i++) {
     if ((int)(array[i] / min) % 2 == 0) {
       res += sin(array[i]);
@@ -144,6 +130,7 @@ int main(int argc, char * argv[]) {
   double X;
 
   for (i = 0; i < 100; i++) /* 100 экспериментов */ {
+    //srand(i); /* инициализировать начальное значение ГСЧ */
     seed = i;
     /* Заполнить массив исходных данных размером N */
     generate_array(first_array, & seed, N, 1, A);
