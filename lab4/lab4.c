@@ -15,10 +15,7 @@ double omp_get_wtime()
   return (double)timeval.tv_sec + (double)timeval.tv_usec / 1000000;
 }
 
-void omp_set_nested(int val)
-{
-  val = 1;
-}
+void omp_set_nested(int val) { }
 
 void omp_set_num_threads(int M) { }
 #endif
@@ -26,9 +23,8 @@ void omp_set_num_threads(int M) { }
 #define A 504
 
 double * generate_array(double * array, unsigned int * seed, int size, int min, int max) {
-  int i;
-  #pragma omp parallel for default(none) private(i) shared(array, seed, size, min, max)
-  for (i = 0; i < size; i++) {
+  #pragma omp parallel for default(none) shared(array, seed, size, min, max)
+  for (int i = 0; i < size; i++) {
     unsigned int seed_i = i + *seed;
     array[i] = min + ((double)(rand_r(&seed_i) % (max - min)));
   }
@@ -36,26 +32,22 @@ double * generate_array(double * array, unsigned int * seed, int size, int min, 
 }
 
 void map_array1(double * array1, int size) {
-  int i;
-  #pragma omp parallel for default(none) private(i) shared(array1, size)
-  for (i = 0; i < size; i++) {
+  #pragma omp parallel for default(none) shared(array1, size)
+  for (int i = 0; i < size; i++) {
     array1[i] = exp(sqrt(array1[i]));
   }
 }
 
 void copy_array2(double * array2, double * array2_copy, int size) {
-  int i;
-  #pragma omp parallel for default(none) private(i) shared(array2, array2_copy, size)
-  for (i = 0; i < size; i++) {
+  #pragma omp parallel for default(none) shared(array2, array2_copy, size)
+  for (int i = 0; i < size; i++) {
     array2_copy[i+1] = array2[i];
   }
 }
 
 void map_array2(double * array2, double * array2_copy, int size) {
-  int i;
-
-  #pragma omp parallel for default(none) private(i) shared(array2, array2_copy, size)
-  for (i = 0; i < size; i++) {
+  #pragma omp parallel for default(none) shared(array2, array2_copy, size)
+  for (int i = 0; i < size; i++) {
 
     if (i > 0) {
       array2[i] = array2[i] + array2_copy[i];
@@ -65,9 +57,8 @@ void map_array2(double * array2, double * array2_copy, int size) {
 }
 
 void merge(double * array1, double * array2, int size) {
-  int i;
-  #pragma omp parallel for default(none) private(i) shared(array1, array2, size)
-  for (i = 0; i < size; i++) {
+  #pragma omp parallel for default(none) shared(array1, array2, size)
+  for (int i = 0; i < size; i++) {
     if (array1[i] < array2[i]) {
       array2[i] = array1[i];
     }
@@ -131,9 +122,9 @@ double reduce(double * array, int size) {
       min = array[i];
     }
   }
-  int i;
-  #pragma omp parallel for default(none) private(i) shared(size, min, array)  reduction(+:res)
-  for (i = 0; i < size; i++) {
+
+  #pragma omp parallel for default(none) shared(size, min, array)  reduction(+:res)
+  for (int i = 0; i < size; i++) {
     if ((int)(array[i] / min) % 2 == 0) {
       res += sin(array[i]);
     }
@@ -198,9 +189,9 @@ int main_work(int argc, char* argv[], int *progress) {
         #pragma omp section
         selection_sort(second_array, N / 4);
         #pragma omp section
-        selection_sort(second_array + (N / 4), N / 4);
+        selection_sort(second_array + (N / 4), N / 2 - N / 4);
     }
-    mergeArrays(merged_array, second_array, second_array + (N / 4), N / 4, N / 4);
+    mergeArrays(merged_array, second_array, second_array + (N / 4), N / 4, N / 2 - N / 4);
     #else
     selection_sort(second_array, N / 2);
     #endif
@@ -225,6 +216,9 @@ int main_work(int argc, char* argv[], int *progress) {
   free(first_array);
   free(second_array);
   free(second_array_copy);
+  #if defined(_OPENMP)
+  free(merged_array);
+  #endif
 
   T2 = omp_get_wtime(); /* запомнить текущее время T2 */
   delta_ms = 1000 * (T2 - T1);
@@ -239,7 +233,10 @@ void time_progress(int *progress)
   int progress_value;
 
   while(progress_value < 100) {
+    #pragma omp critical
+    {
     progress_value = *progress;
+    }
     printf("Progress = %d%%\n", progress_value);
     sleep(1);
   }
