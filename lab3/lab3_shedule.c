@@ -20,26 +20,22 @@ double * generate_array(double * array, unsigned int * seed, int size, int min, 
 }
 
 void map_array1(double * array1, int size) {
-  int i;
-  #pragma omp parallel for default(none) private(i) shared(array1, size) schedule(SCHEDULE_TYPE, CHUNCK_SIZE)
-  for (i = 0; i < size; i++) {
+  #pragma omp parallel for default(none) shared(array1, size) schedule(SCHEDULE_TYPE, CHUNCK_SIZE)
+  for (int i = 0; i < size; i++) {
     array1[i] = exp(sqrt(array1[i]));
   }
 }
 
 void copy_array2(double * array2, double * array2_copy, int size) {
-  int i;
-  #pragma omp parallel for default(none) private(i) shared(array2, array2_copy, size) schedule(SCHEDULE_TYPE, CHUNCK_SIZE)
-  for (i = 0; i < size; i++) {
+  #pragma omp parallel for default(none) shared(array2, array2_copy, size) schedule(SCHEDULE_TYPE, CHUNCK_SIZE)
+  for (int i = 0; i < size; i++) {
     array2_copy[i+1] = array2[i];
   }
 }
 
 void map_array2(double * array2, double * array2_copy, int size) {
-  int i;
-
-  #pragma omp parallel for default(none) private(i) shared(array2, array2_copy, size) schedule(SCHEDULE_TYPE, CHUNCK_SIZE)
-  for (i = 0; i < size; i++) {
+  #pragma omp parallel for default(none) shared(array2, array2_copy, size) schedule(SCHEDULE_TYPE, CHUNCK_SIZE)
+  for (int i = 0; i < size; i++) {
 
     if (i > 0) {
       array2[i] = array2[i] + array2_copy[i];
@@ -49,9 +45,8 @@ void map_array2(double * array2, double * array2_copy, int size) {
 }
 
 void merge(double * array1, double * array2, int size) {
-  int i;
-  #pragma omp parallel for default(none) private(i) shared(array1, array2, size) schedule(SCHEDULE_TYPE, CHUNCK_SIZE)
-  for (i = 0; i < size; i++) {
+  #pragma omp parallel for default(none) shared(array1, array2, size) schedule(SCHEDULE_TYPE, CHUNCK_SIZE)
+  for (int i = 0; i < size; i++) {
     if (array1[i] < array2[i]) {
       array2[i] = array1[i];
     }
@@ -88,9 +83,9 @@ double reduce(double * array, int size) {
       min = array[i];
     }
   }
-  int i;
-  #pragma omp parallel for default(none) private(i) shared(size, min, array)  reduction(+:res) schedule(SCHEDULE_TYPE, CHUNCK_SIZE)
-  for (i = 0; i < size; i++) {
+
+  #pragma omp parallel for default(none) shared(size, min, array)  reduction(+:res) schedule(SCHEDULE_TYPE, CHUNCK_SIZE)
+  for (int i = 0; i < size; i++) {
     if ((int)(array[i] / min) % 2 == 0) {
       res += sin(array[i]);
     }
