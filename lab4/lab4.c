@@ -4,6 +4,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <omp.h>
+#include <string.h>
 
 #if defined(_OPENMP)
 #include "omp.h"
@@ -87,31 +88,42 @@ void selection_sort(double * array, int size) {
   }
 }
 
-void mergeArrays(double *dest, double *arr1, double *arr2, int len1, int len2)
-{
-  int i, j, k;
-  i = j = k = 0;
-  for (i = 0; i < len1 && j < len2;) {
-    if (arr1[i] < arr2[j]) {
-      dest[k] = arr1[i];
-      k++;
-      i++;
-    } else {
-      dest[k] = arr2[j];
-      k++;
-      j++;
+void merge_sorted_arrays(double * dest, double * src1, double * src2, int size1, int size2) {
+  int index1 = 0;
+  int index2 = 0;
+  for (int i = 0; i < size1 + size2; i++) {
+    if (index2 == size2 || (index1 != size1 && src1[index1] <= src2[index2])) {
+      dest[i] = src1[index1];
+      index1++;
+    } else if (index1 == size1 || (index2 != size2 && src1[index1] > src2[index2])) {
+      dest[i] = src2[index2];
+      index2++;
     }
   }
-  while (i < len1) {
-    dest[k] = arr1[i];
-    k++;
-    i++;
+}
+
+void selection_sort_by_two_arrays(double * array, int size) {
+  int first_array_size = size / 2 + size % 2;
+  int second_array_size = size / 2;
+
+  double * first_array = malloc(sizeof(double) * first_array_size);
+  double * second_array = malloc(sizeof(double) * second_array_size);
+
+  memcpy(first_array, array, sizeof(double) * first_array_size);
+  memcpy(second_array, array + first_array_size, sizeof(double) * second_array_size);
+
+#pragma omp parallel sections
+  {
+#pragma omp section
+    selection_sort(first_array, first_array_size);
+#pragma omp section
+    selection_sort(second_array, second_array_size);
   }
-  while (j < len2) {
-    dest[k] = arr2[j];
-    k++;
-    j++;
-  }
+
+  merge_sorted_arrays(array, first_array, second_array, first_array_size, second_array_size);
+
+  free(first_array);
+  free(second_array);
 }
 
 double reduce(double * array, int size) {
@@ -158,9 +170,6 @@ int main_work(int argc, char* argv[], int *progress) {
 
   double * first_array = malloc(sizeof(double) * N);
   double * second_array = malloc(sizeof(double) * (N / 2));
-  #if defined(_OPENMP)
-  double * merged_array = malloc(sizeof(double) * (N / 2));
-  #endif
   double * second_array_copy = malloc(sizeof(double) * (N / 2) + 1);
   second_array_copy[0] = 0;
 
@@ -184,25 +193,13 @@ int main_work(int argc, char* argv[], int *progress) {
     /* Отсортировать массив с результатами указанным методом */
 
     #if defined(_OPENMP)
-    #pragma omp parallel sections
-    {
-        #pragma omp section
-        selection_sort(second_array, N / 4);
-        #pragma omp section
-        selection_sort(second_array + (N / 4), N / 2 - N / 4);
-    }
-    mergeArrays(merged_array, second_array, second_array + (N / 4), N / 4, N / 2 - N / 4);
+    selection_sort_by_two_arrays(second_array, N / 2);
     #else
     selection_sort(second_array, N / 2);
     #endif
 
-    #if defined(_OPENMP)
-    // printArray(merged_array, N/2);
-     X = reduce(merged_array, N / 2);
-    #else
     // printArray(second_array, N/2);
      X = reduce(second_array, N / 2);
-    #endif
      printf("\n%d: X=%f \n", i, X);
 
     #if defined(_OPENMP)
@@ -216,9 +213,6 @@ int main_work(int argc, char* argv[], int *progress) {
   free(first_array);
   free(second_array);
   free(second_array_copy);
-  #if defined(_OPENMP)
-  free(merged_array);
-  #endif
 
   T2 = omp_get_wtime(); /* запомнить текущее время T2 */
   delta_ms = 1000 * (T2 - T1);
@@ -235,9 +229,11 @@ void time_progress(int *progress)
   while(progress_value < 100) {
     #pragma omp critical
     {
-    progress_value = *progress;
+      progress_value = *progress;
     }
-    printf("Progress = %d%%\n", progress_value);
+    printf("\n-----------------"
+           "\nProgress = %d%%"
+           "\n-----------------\n", progress_value);
     sleep(1);
   }
 }
